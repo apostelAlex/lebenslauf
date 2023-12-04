@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchFrameException
 
 def decode_stelle(driver:Safari):
-    with open(f"data/{driver.current_url}.html", "w") as f:
+    with open(f"data/{driver.current_url.split('/')[-1]}.html", "w") as f:
         f.write(driver.page_source)
 
 if __name__ == "__main__":
@@ -21,14 +21,15 @@ if __name__ == "__main__":
     with open("decoded.json", "r") as f:
         decoded = json.load(f)
     for link in links:
-        current = driver.find_element(By.TAG_NAME, "body")
-        driver.get(link)
-        while current == driver.find_element(By.CLASS_NAME, "html"):
-            pass
-        stelle = decode_stelle(driver)
-        decoded += [link]
-        with open("decoded.json", "w") as f:
-            json.dump(decoded, f)
+        if link not in decoded:
+            current = driver.find_element(By.TAG_NAME, "body")
+            driver.get(link)
+            while current == driver.find_element(By.TAG_NAME, "body"):
+                pass
+            stelle = decode_stelle(driver)
+            decoded += [link]
+            with open("decoded.json", "w") as f:
+                json.dump(decoded, f)
         
         
     
