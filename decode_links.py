@@ -18,8 +18,6 @@ def decode_stelle_2(driver:Chrome):
 if __name__ == "__main__":
     with open("links-MA.txt", "r") as f:
         links = json.load(f)
-        print(len(links))
-        exit()
     driver = Chrome()
     driver.maximize_window()
     driver.implicitly_wait(5)
