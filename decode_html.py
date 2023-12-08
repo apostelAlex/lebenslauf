@@ -8,7 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchFrameException
 from bs4 import BeautifulSoup
 
-def decode_stelle(driver, index):
+def decode_stelle(driver, index, url):
     soup = BeautifulSoup(driver, "lxml")
     elem1 = soup.select('a[data-at="header-company-name"]')[0]
     elem2 = elem1.parent.next_sibling
@@ -19,14 +19,33 @@ def decode_stelle(driver, index):
     anstellung = elems[1] # Feste Anstellung or Befristeter Vertrag or Ausbildung, Studium
     zeit = elems[2] # Vollzeit, Teilzeit, Home Office möglich
     erschienen = elems[3]
+    reqs = []
+    try:
+        reqs_root = soup.select('body > div.pagelayout > div.background-image > div > div.reb-wrapper > div > div.print-100-percent.reb-column-left.js-listing-container-left > div > div:nth-child(13) > div.js-app-ld-ContentBlock > div > div > div:nth-child(3) > div > article > div.listing-content-provider-15mhjzh.at-section-text-profile-content.listingContentBrandingColor > span')[0]
+        reqs_uls = reqs_root.find_all("ul")
+        for ul in reqs_uls:
+            reqs_lis = ul.find_all("li")
+            for li in reqs_lis:
+                reqs += [li.text]
+    except IndexError:
+        elements = soup.find_all()
+        for elem in elements:
+            if "Ausbildung" in elem.text or "Studium" in elem.text:
+                reqs = [elem.text]
+    
+    
+    
     # stadt = soup.find_all("span", class_=re.compile(r"^listing-content-provider-.*$"))[3]
     dd = {"Firma": elem1.text,
           "Stelle": elem2.text, 
           "Stadt": stadt.text, 
           "Anstellung": anstellung.text,
           "Arbeistzeit" : zeit.text, 
-          "Erschienen": erschienen.text
+          "Erschienen": erschienen.text,
+          "Voraussetzungen": reqs, 
+          "URL": url if not url.endswith(".html.html") else url[:-5]
           }
+    
     with open("data/"+str(index)+ ".json", "w") as f:
         json.dump(dd, f)
 
@@ -37,8 +56,11 @@ def decode_stelle(driver, index):
 if __name__ == "__main__":
     index = 0
     for x in os.listdir("data/"):
+        if x.endswith(".json"):
+            continue
         with open("data/" + x, "r") as f:
-            decode_stelle(f.read(), index)
+            print(x)
+            decode_stelle(f.read(), index, x)
         index += 1
     # with open("links.txt", "r") as f:
     #     links = json.load(f)
